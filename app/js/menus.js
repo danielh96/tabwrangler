@@ -1,5 +1,6 @@
 /* @flow */
 
+import { isLocked } from './tab';
 import settings from './settings';
 import tabmanager from './tabmanager';
 
@@ -17,7 +18,7 @@ export default {
   pageSpecificActions: {
     lockTab(onClickData: any, selectedTab: chrome$Tab) {
       if (selectedTab.id == null) return;
-      tabmanager.lockTab(selectedTab.id);
+      tabmanager.lockTab(selectedTab);
     },
     lockDomain(onClickData: any, selectedTab: chrome$Tab) {
       // Chrome tabs don't necessarily have URLs. In those cases there is no domain to lock.
@@ -37,7 +38,7 @@ export default {
     },
   },
 
-  createContextMenus () {
+  createContextMenus() {
     const lockTab = {
       type: 'checkbox',
       title: chrome.i18n.getMessage('contextMenu_lockTab') || '',
@@ -62,23 +63,21 @@ export default {
   },
 
   updateContextMenus(tabId: number) {
-    const self = this;
     // Little bit of a kludge, would be nice to be DRY here but this was simpler.
     // Sets the title again for each page.
-    chrome.tabs.get(tabId, function(tab) {
+    chrome.tabs.get(tabId, tab => {
+      chrome.contextMenus.update(this.lockTabId, { checked: isLocked(tab) });
       try {
         if (tab.url == null) return;
         const currentDomain = getDomain(tab.url);
         if (currentDomain == null) return;
-        chrome.contextMenus.update(
-          self.lockDomainId,
-          {title: chrome.i18n.getMessage('contextMenu_lockSpecificDomain', currentDomain) || ''}
-        );
+        chrome.contextMenus.update(this.lockDomainId, {
+          title: chrome.i18n.getMessage('contextMenu_lockSpecificDomain', currentDomain) || '',
+        });
       } catch (e) {
         console.log(tab, 'Error in updating menu');
         throw e;
       }
     });
-    chrome.contextMenus.update(this.lockTabId, {checked: tabmanager.isLocked(tabId)});
   },
 };

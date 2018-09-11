@@ -21,6 +21,9 @@ const Settings = {
     // An array of tabids which have been explicitly locked by the user.
     lockedIds: [],
 
+    // Array<chrome$Tab> that represents tabs explicitly locked by the user.
+    lockedTabs: [],
+
     // Max number of tabs stored before the list starts getting truncated.
     maxTabs: 100,
 
@@ -59,14 +62,38 @@ const Settings = {
       }
     }
     chrome.storage.sync.get(keys, items => {
-      for (const i in items) {
-        if (items.hasOwnProperty(i)) {
-          this.cache[i] = items[i];
-
-          // Because the badge count is external state, this side effect must be run once the value
-          // is read from storage. This could more elequently be handled in a reducer, but place it
-          // here to make minimal changes while correctly updating the badge count.
-          if (i === 'showBadgeCount') tabmanager.updateClosedCount();
+      for (const key in items) {
+        if (items.hasOwnProperty(key)) {
+          const value = items[key];
+          this.cache[key] = value;
+          switch (key) {
+            // Remove any locked tabs that no longer exist. If the user started with a fresh session
+            // then all of these tabs will be stale.
+            case 'lockedTabs':
+              chrome.tabs.query({}, tabs => {
+                // Use `tabs` rather than `value` because the tabs have new IDs in a new session. If
+                // these fuzzy-match then it's probably because of index/title/URL/etc. Replace with
+                // new tab objects so the IDs match during this session.
+                const nextLockedTabs = tabs.filter(tabA =>
+                  value.some(tabB => tabmanager.tabUtils.tabFuzzyMatchesTab(tabA, tabB))
+                );
+                this.setValue('lockedTabs', nextLockedTabs);
+              });
+              break;
+            case 'purgeClosedTabs':
+              if (value !== false) {
+                tabmanager.closedTabs.clear();
+              }
+              break;
+            // Because the badge count is external state, this side effect must be run once the
+            // value is read from storage. This could more elequently be handled in a reducer, but
+            // place it here to make minimal changes while correctly updating the badge count.
+            case 'showBadgeCount':
+              tabmanager.updateClosedCount();
+              break;
+            default:
+              break;
+          }
         }
       }
     });

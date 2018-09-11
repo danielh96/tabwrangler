@@ -113,6 +113,8 @@ const startup = function() {
   const { persistor, store } = configureStore();
   TW.store = store;
   TW.persistor = persistor;
+  TW.settings = settings;
+  TW.tabmanager = tabmanager;
 
   // Update closed count badge in the URL bar whenever the store updates.
   const savedTabsCountWatch = watch(store.getState, 'localStorage.savedTabs');
@@ -123,14 +125,6 @@ const startup = function() {
   );
 
   settings.init();
-
-  TW.settings = settings;
-  TW.tabmanager = tabmanager;
-
-  if (settings.get('purgeClosedTabs') !== false) {
-    tabmanager.closedTabs.clear();
-  }
-  settings.set('lockedIds', []);
 
   const debouncedUpdateLastAccessed = debounce(
     tabmanager.updateLastAccessed.bind(tabmanager),

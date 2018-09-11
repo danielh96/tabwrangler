@@ -1,6 +1,7 @@
 /* @flow */
 /* global TW */
 
+import * as tabUtils from './tab';
 import { exportData, importData } from './actions/importExportActions';
 import {
   removeAllSavedTabs,
@@ -139,6 +140,7 @@ const TabManager = {
   /* Re-export so these can be executed in the context of the Tab Manager. */
   exportData,
   importData,
+  tabUtils,
 
   /**
    * Wrapper function to get all tab times regardless of time inactive
@@ -166,7 +168,9 @@ const TabManager = {
     return ret;
   },
 
-  getWhitelistMatch(url: string) {
+  getWhitelistMatch(url: ?string) {
+    if (url == null) return false;
+
     const whitelist = TW.settings.get('whitelist');
     for (let i = 0; i < whitelist.length; i++) {
       if (url.indexOf(whitelist[i]) !== -1) {
@@ -176,25 +180,14 @@ const TabManager = {
     return false;
   },
 
-  isLocked(tabId: number) {
-    const lockedIds = TW.settings.get('lockedIds');
-    if (lockedIds.indexOf(tabId) !== -1) {
-      return true;
-    }
-    return false;
-  },
-
   isWhitelisted(url: string) {
     return this.getWhitelistMatch(url) !== false;
   },
 
-  lockTab(tabId: number) {
-    const lockedIds = TW.settings.get('lockedIds');
-
-    if (tabId > 0 && lockedIds.indexOf(tabId) === -1) {
-      lockedIds.push(tabId);
-    }
-    TW.settings.set('lockedIds', lockedIds);
+  lockTab(tab: chrome$Tab) {
+    let lockedTabs = TW.settings.get('lockedTabs');
+    lockedTabs = [...lockedTabs, tab];
+    TW.settings.set('lockedTabs', lockedTabs);
   },
 
   // `addListener` intersection results in incorrect function type
@@ -212,12 +205,16 @@ const TabManager = {
     TabManager.updateLastAccessed(addedTabId);
   },
 
-  unlockTab(tabId: number) {
-    const lockedIds = TW.settings.get('lockedIds');
-    if (lockedIds.indexOf(tabId) > -1) {
-      lockedIds.splice(lockedIds.indexOf(tabId), 1);
+  unlockTab(tab: chrome$Tab) {
+    const lockedTabs = TW.settings.get('lockedTabs');
+    const lockedTabIndex = lockedTabs.findIndex(lockedTab =>
+      tabUtils.tabFuzzyMatchesTab(tab, lockedTab)
+    );
+    if (lockedTabIndex !== -1) {
+      const nextLockedTabs = lockedTabs.slice();
+      nextLockedTabs.splice(lockedTabIndex, 1);
+      TW.settings.set('lockedTabs', nextLockedTabs);
     }
-    TW.settings.set('lockedIds', lockedIds);
   },
 
   updateClosedCount() {

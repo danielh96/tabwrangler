@@ -2,7 +2,6 @@
 
 import OpenTabRow from './OpenTabRow';
 import React from 'react';
-import { isManuallyLockable } from './tab';
 
 const TW = chrome.extension.getBackgroundPage().TW;
 
@@ -52,9 +51,9 @@ export default class LockTab extends React.PureComponent<{}, State> {
     }
 
     // Toggle only the tabs that are manually lockable.
-    tabsToToggle.filter(tab => isManuallyLockable(tab)).forEach(tab => {
-      if (selected) tabmanager.lockTab(tab.id);
-      else tabmanager.unlockTab(tab.id);
+    tabsToToggle.filter(tab => tabmanager.tabUtils.isManuallyLockable(tab)).forEach(tab => {
+      if (selected) tabmanager.lockTab(tab);
+      else tabmanager.unlockTab(tab);
     });
 
     this._lastSelectedTab = tab;

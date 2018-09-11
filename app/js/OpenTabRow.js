@@ -1,6 +1,5 @@
 /* @flow */
 
-import { isLocked, isManuallyLockable } from './tab';
 import LazyImage from './LazyImage';
 import React from 'react';
 
@@ -21,7 +20,7 @@ type Props = {
 };
 
 export default class OpenTabRow extends React.Component<Props> {
-  handleLockedOnClick = (event: SyntheticMouseEvent<HTMLInputElement>) => {
+  handleLockedOnChange = (event: SyntheticMouseEvent<HTMLInputElement>) => {
     // Dynamic type check to ensure target is an input element.
     if (!(event.target instanceof HTMLInputElement)) return;
     this.props.onToggleTab(this.props.tab, event.target.checked, event.shiftKey);
@@ -29,11 +28,10 @@ export default class OpenTabRow extends React.Component<Props> {
 
   render() {
     const { tab } = this.props;
-    const tabWhitelistMatch = tabmanager.getWhitelistMatch(tab.url);
-    const tabIsLocked = isLocked(tab);
-
+    const tabIsLocked = tabmanager.tabUtils.isLocked(tab);
     let lockStatusElement;
     if (tabIsLocked) {
+      const tabWhitelistMatch = tabmanager.getWhitelistMatch(tab.url);
       let reason;
       if (tab.pinned) {
         reason = chrome.i18n.getMessage('tabLock_lockedReason_pinned');
@@ -81,8 +79,8 @@ export default class OpenTabRow extends React.Component<Props> {
         <td className="text-center" style={{ verticalAlign: 'middle', width: '1px' }}>
           <input
             checked={tabIsLocked}
-            disabled={!isManuallyLockable(tab)}
-            onClick={this.handleLockedOnClick}
+            disabled={!tabmanager.tabUtils.isManuallyLockable(tab)}
+            onChange={this.handleLockedOnChange}
             type="checkbox"
           />
         </td>
