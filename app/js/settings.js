@@ -2,6 +2,21 @@
 
 import tabmanager from './tabmanager';
 
+  // Listener function definition, set paused state based on browser state
+function setPausedOnIdleState(newState) {
+  switch (newState) {
+    case 'active':
+      Settings.setpaused(false);
+      break;
+    case 'idle':
+      Settings.setpaused(true);
+      break;
+    case 'locked':
+      Settings.setpaused(true);
+      break;
+  }
+}
+
 /**
  * @type {Object}
  */
@@ -190,39 +205,25 @@ const Settings = {
   },
 
   setpauseOnIdleOrLock(value: boolean) {
-    const setPausedFunc = function setPausedOnIdleState(newState) {
-      switch (newState) {
-        case 'active':
-          Settings.setpaused(false);
-          break;
-        case 'idle':
-          Settings.setpaused(true);
-          break;
-        case 'locked':
-          Settings.setpaused(true);
-          break;
-      }
-    };
-
     if(value === false) {
       chrome.permissions.contains({
         permissions: ['idle'],
       }, function(result) {
         if (result) {
-          chrome.idle.onStateChanged.removeListener(setPausedFunc);
+          chrome.idle.onStateChanged.removeListener(setPausedOnIdleState);
           chrome.permissions.remove({
             permissions: ['idle'],
           });
-          Settings.setValue('setpauseOnIdleOrLock', value);
+          Settings.setValue('pauseOnIdleOrLock', value);
         }
       });
-    } else if (value === true) {
+    } else {
       chrome.permissions.request({
         permissions: ['idle'],
       }, function(granted) {
         if (granted) {
-          chrome.idle.onStateChanged.addListener(setPausedFunc);
-          Settings.setValue('setpauseOnIdleOrLock', value);
+          chrome.idle.onStateChanged.addListener(setPausedOnIdleState);
+          Settings.setValue('pauseOnIdleOrLock', value);
         }
       });
     }
@@ -250,5 +251,7 @@ const Settings = {
     );
   },
 };
+
+
 
 export default Settings;
