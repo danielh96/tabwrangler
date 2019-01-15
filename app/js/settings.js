@@ -48,6 +48,7 @@ const Settings = {
     // We allow duplicate entries in the closed/wrangled tabs list
     wrangleOption: 'withDupes',
 
+    // Enable pausing TabWrangler when Idle or Locked
     pauseOnIdleOrLock: false,
   },
 
@@ -190,7 +191,6 @@ const Settings = {
 
   setpauseOnIdleOrLock(value: boolean) {
     const setPausedFunc = function setPausedOnIdleState(newState) {
-      console.log(newState);
       switch (newState) {
         case 'active':
           Settings.setpaused(false);
