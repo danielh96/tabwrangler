@@ -209,6 +209,10 @@
     "description": "Label for checkbox to filter tabs that are playing audio",
     "message": "Don't close tabs that are playing audio"
   },
+  "options_option_pauseOnIdleOrLock_label": {
+    "description": "Label for checkbox to enable pause automatically when browser state is locked or idle",
+    "message": "Pause when locked or idle"
+  },
   "options_option_minTabs_label": {
     "description": "Label preceeding input for setting minimum number of tabs",
     "message": "Auto-close tabs only if I have more than:"

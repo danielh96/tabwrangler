@@ -40,6 +40,9 @@
     "storage",
     "tabs"
   ],
+  "optional_permissions": [
+    "idle"
+  ],
   "web_accessible_resources": [
     "img/icon48.png"
   ]

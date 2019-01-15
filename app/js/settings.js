@@ -47,6 +47,8 @@ const Settings = {
 
     // We allow duplicate entries in the closed/wrangled tabs list
     wrangleOption: 'withDupes',
+
+    pauseOnIdleOrLock: false,
   },
 
   // Gets all settings from sync and stores them locally.
@@ -184,6 +186,46 @@ const Settings = {
       );
     }
     Settings.setValue('paused', value);
+  },
+
+  setpauseOnIdleOrLock(value: boolean) {
+    const setPausedFunc = function setPausedOnIdleState(newState) {
+      console.log(newState);
+      switch (newState) {
+        case 'active':
+          Settings.setpaused(false);
+          break;
+        case 'idle':
+          Settings.setpaused(true);
+          break;
+        case 'locked':
+          Settings.setpaused(true);
+          break;
+      }
+    };
+
+    if(value === false) {
+      chrome.permissions.contains({
+        permissions: ['idle'],
+      }, function(result) {
+        if (result) {
+          chrome.idle.onStateChanged.removeListener(setPausedFunc);
+          chrome.permissions.remove({
+            permissions: ['idle'],
+          });
+          Settings.setValue('setpauseOnIdleOrLock', value);
+        }
+      });
+    } else if (value === true) {
+      chrome.permissions.request({
+        permissions: ['idle'],
+      }, function(granted) {
+        if (granted) {
+          chrome.idle.onStateChanged.addListener(setPausedFunc);
+          Settings.setValue('setpauseOnIdleOrLock', value);
+        }
+      });
+    }
   },
 
   setshowBadgeCount(value: boolean) {

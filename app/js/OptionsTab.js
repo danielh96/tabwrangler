@@ -358,6 +358,18 @@ class OptionsTab extends React.Component<OptionsTabProps, OptionsTabState> {
               {chrome.i18n.getMessage('options_option_filterAudio_label')}
             </label>
           </div>
+          <div className="checkbox">
+            <label>
+              <input
+                defaultChecked={settings.get('pauseOnIdleOrLock')}
+                id="pauseOnIdleOrLock"
+                name="pauseOnIdleOrLock"
+                onChange={this.handleSettingsChange}
+                type="checkbox"
+              />
+              {chrome.i18n.getMessage('options_option_pauseOnIdleOrLock_label')}
+            </label>
+          </div>
           <div className="form-group">
             <TabWrangleOption
               onChange={this.handleSettingsChange}
